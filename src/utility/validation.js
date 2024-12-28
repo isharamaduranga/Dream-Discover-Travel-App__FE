@@ -37,3 +37,20 @@ export const validateRegisterDetails = (state) => {
   }
   return true
 }
+export const validateCommentDetails = (state) => {
+  if (state.name.trim() === "" || !NAME_REGEX.test(state.name)) {
+    toast.error("Please enter valid user name")
+    return false
+  }
+  if (state.email.trim() === "" || !EMAIL_REGEX.test(state.email)) {
+    toast.error("Please enter valid email address")
+    return false
+  }
+  if (state.comment_text.trim() === "") {
+    toast.error("Please enter valid comment texts")
+    return false
+  }
+  return true
+}
+
+
