@@ -53,4 +53,28 @@ export const validateCommentDetails = (state) => {
   return true
 }
 
+export const validatePlaceDetails = (state) => {
+  if (state.user_full_name.trim() === "" || !NAME_REGEX.test(state.user_full_name)) {
+    toast.error("Please enter valid user name")
+    return false
+  }
+  if (state.title.trim() === "" || !NAME_REGEX.test(state.title)) {
+    toast.error("Please enter valid place title")
+    return false
+  }
+  if (state.tags.trim() === "") {
+    toast.error("Please enter tags")
+    return false
+  }
+  if (state.content.trim() === "") {
+    toast.error("Please enter valid contents")
+    return false
+  }
+  if (state.img === null) {
+    toast.error("Please enter valid file img")
+    return false
+  }
+  return true
+}
+
 
