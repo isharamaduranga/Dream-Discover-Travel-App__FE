@@ -18,5 +18,22 @@ export const validateLoginDetails = (state) => {
 
   return true
 }
-
-
+export const validateRegisterDetails = (state) => {
+  if (state.username.trim() === "" || !NAME_REGEX.test(state.username)) {
+    toast.error("Please enter valid user name")
+    return false
+  }
+  if (state.email.trim() === "" || !EMAIL_REGEX.test(state.email)) {
+    toast.error("Please enter valid email address")
+    return false
+  }
+  if (state.password.trim() === "" || !PASSWORD_REGEX.test(state.password)) {
+    toast.error("Please enter valid password")
+    return false
+  }
+  if (state.user_img === null) {
+    toast.error("Please enter valid file img")
+    return false
+  }
+  return true
+}
