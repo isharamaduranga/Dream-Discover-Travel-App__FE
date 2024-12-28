@@ -6,4 +6,17 @@ export const PASSWORD_REGEX = /^.{5,}$/
 export const NAME_REGEX = /^[A-z ]+$/
 
 
+export const validateLoginDetails = (state) => {
+  if (state.username.trim() === "" || !EMAIL_REGEX.test(state.username)) {
+    toast.error("Please enter valid email address")
+    return false
+  }
+  if (state.password.trim() === "" || !PASSWORD_REGEX.test(state.password)) {
+    toast.error("Please enter valid password")
+    return false
+  }
+
+  return true
+}
+
 
