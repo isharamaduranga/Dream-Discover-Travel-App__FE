@@ -77,4 +77,15 @@ export const validatePlaceDetails = (state) => {
   return true
 }
 
+export const validatePlaceSearchDetails = (state) => {
+  if (state.tag.trim() === "") {
+    toast.error("Please select valid category type")
+    return false
+  }
+  if (!state.minscore) {
+    toast.error("Please select valid Ratings range")
+    return false
+  }
+  return true
+}
 
