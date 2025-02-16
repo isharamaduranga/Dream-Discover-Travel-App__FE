@@ -8,11 +8,12 @@ import { useRTL } from "@hooks/useRTL"
 import "@styles/react/libs/swiper/swiper.scss"
 import FooterPage from "@src/views/home/footer/footer"
 import Select from "react-select"
-import { useState } from "react"
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"
 import { PLACES_PATH, PLACES_PATH_FILTER } from "@src/router/routes/route-constant";
 import { validatePlaceSearchDetails } from "@src/utility/validation"
 import { searchPlaceByTag_Min_Max } from "@src/services/place"
+import { getAllCategory } from "@src/services/category";
 
 const Home = () => {
 
@@ -35,6 +36,8 @@ const Home = () => {
     minscore: "",
     maxscore: ""
   })
+// State to hold fetched categories
+  const [categoriesOptions, setCategoriesOptions] = useState([])
 
   const ratingRanges = [
     { value: { minscore: 4.0, maxscore: 5.0 }, label: "5 Star" },
@@ -44,22 +47,34 @@ const Home = () => {
     { value: { minscore: 0.0, maxscore: 1.0 }, label: "1 Star" }
   ]
 
-  const categoriesSingle = [
-    { value: "Adventure", label: "Adventure" },
-    { value: "WildLife", label: "WildLife" },
-    { value: "WaterSport", label: "WaterSport" },
-    { value: "Nature", label: "Nature" },
-    { value: "Camping", label: "Camping" },
-    { value: "Ancient", label: "Ancient" },
-    { value: "Festive", label: "Festive" }
-  ]
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await getAllCategory()
+        if (response.status === 200) {
+          const categoriesData = response.data.categories.map((cat) => ({
+            value: cat.id,
+            label: cat.title
+          }))
+          setCategoriesOptions(categoriesData)
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error)
+      }
+    }
+    fetchCategories()
+  }, [])
 
-  const handleCategoryChange = (selectedTagType) => {
+
+  // Handle Category Change
+  const handleCategoryChange = (selectedCategory) => {
     setForm((prev) => ({
       ...prev,
-      tag: selectedTagType.value
+      tag: selectedCategory ? selectedCategory.value : ""
     }))
   }
+
   const handleAccountTypeChange = (selectedAccType) => {
     setForm((prev) => ({
       ...prev,
@@ -115,9 +130,9 @@ const Home = () => {
                     id={`categoryTag`}
                     className="react-select"
                     classNamePrefix="select"
-                    value={categoriesSingle.find(item => item.value === form.tag)}
+                    value={categoriesOptions.find((item) => item.value === form.tag)}
                     isClearable={false}
-                    options={categoriesSingle}
+                    options={categoriesOptions} // Use the dynamically fetched categories
                     onChange={handleCategoryChange}
                   />
                 </Col>
