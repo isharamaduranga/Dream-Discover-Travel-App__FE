@@ -20,7 +20,7 @@ const getLayout = {
 }
 
 import * as constant from './route-constant'
-import { PLACES_PATH_FILTER } from "./route-constant";
+import { MANAGE_PLACE_PATH, PLACES_PATH_FILTER } from "./route-constant";
 
 // ** Default Route
 const DefaultRoute = "/home"
@@ -35,8 +35,8 @@ const AddNewPlace = lazy(() => import("../../views/places/add_new_place"))
 const Login = lazy(() => import("../../views/Login"))
 const Register = lazy(() => import("../../views/Register"))
 const ForgotPassword = lazy(() => import("../../views/ForgotPassword"))
-
-
+const AdminPortal = lazy(() => import("../../views/admin/AdminPortal"))
+const ManagePlace = lazy(() => import("../../views/admin/ManagePlace"))
 
 // ** Merge Routes
 const Routes = [
@@ -106,6 +106,14 @@ const Routes = [
     meta: {
       layout: "blank"
     }
+  },
+  {
+    path: constant.ADMIN_PATH,
+    element: <AdminPortal />
+  },
+  {
+    path: constant.MANAGE_PLACE_PATH,
+    element: <ManagePlace />
   }
 ]
 

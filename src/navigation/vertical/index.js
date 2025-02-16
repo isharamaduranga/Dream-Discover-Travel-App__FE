@@ -1,16 +1,17 @@
-import { Mail, Home } from "react-feather";
+import { Mail, Home } from "react-feather"
+import AdminPortal from "@src/views/admin/AdminPortal"
 
 export default [
   {
-    id: "home",
-    title: "Home",
+    id: "dashboard",
+    title: "Admin Dashboard",
     icon: <Home size={20} />,
-    navLink: "/home",
+    navLink: "/admin-dashboard"
   },
   {
-    id: "secondPage",
-    title: "Second Page",
+    id: "places",
+    title: "Manage Place",
     icon: <Mail size={20} />,
-    navLink: "/second-page",
-  },
-];
+    navLink: "/manage-place"
+  }
+]
