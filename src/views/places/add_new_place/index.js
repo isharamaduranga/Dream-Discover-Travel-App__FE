@@ -11,7 +11,6 @@ import "@styles/base/pages/page-blog.scss"
 import { Assets } from "@src/assets/images"
 // ** Styles
 import "@styles/react/libs/flatpickr/flatpickr.scss"
-import { categoriesSingle } from "@src/utility/text_details"
 import { validatePlaceDetails } from "@src/utility/validation"
 import { USER_LOGIN_DETAILS } from "@src/router/RouteConstant"
 import toast from "react-hot-toast"
@@ -19,14 +18,15 @@ import { addNewPlace } from "@src/services/place"
 import { PLACES_PATH } from "@src/router/routes/route-constant"
 import SpinnerComponent from "@components/spinner/Fallback-spinner"
 import { useNavigate } from "react-router-dom"
+import axios from "axios";
+import { getAllCategory } from "@src/services/category";
 
 const AddNewPlace = () => {
   // ** States
   const navigate = useNavigate()
-  const
-    [blogCategories, setBlogCategories] = useState([]),
-    [featuredImg, setFeaturedImg] = useState(Assets.emptyImg)
-
+  const [categoriesOptions, setCategoriesOptions] = useState([])
+  const [selectedCategories, setSelectedCategories] = useState([])
+  const [featuredImg, setFeaturedImg] = useState(Assets.emptyImg)
   const [loggedUser, setLoggedUser] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -51,15 +51,34 @@ const AddNewPlace = () => {
 
   console.log("form data ========> ", form)
 
+  // ** Fetch categories from API
   useEffect(() => {
-    const tagsString = blogCategories.map(category => category.value).join(",")
+    const fetchCategories = async () => {
+      try {
+        const response = await getAllCategory()
+        console.log(response);
+        if (response.status === 200) {
+          const categoriesData = response.data.categories.map((cat) => ({
+            value: cat.id,
+            label: cat.title
+          }))
+          setCategoriesOptions(categoriesData)
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error)
+      }
+    }
+    fetchCategories()
+  }, [])
+
+  useEffect(() => {
+    const categoryIdsString = selectedCategories.map(category => category.value).join(",")
     setForm((prevForm) => ({
       ...prevForm,
       user_id: loggedUser?.user_id || "",
-      tags: tagsString
+      tags: categoryIdsString
     }))
-  }, [loggedUser, blogCategories])
-
+  }, [loggedUser, selectedCategories])
 
   const onChangeImg = (e) => {
     const reader = new FileReader()
@@ -130,7 +149,7 @@ const AddNewPlace = () => {
       rating_score: 0.0,
       img: null
     }))
-    setBlogCategories([])
+    setSelectedCategories([])
     setFeaturedImg(Assets.emptyImg)
   }
   return (
@@ -172,21 +191,20 @@ const AddNewPlace = () => {
                       </Col>
 
                       <Col md="4" className="mb-2">
-                        <Label className="form-label" for="blog-edit-category">
-                          Select Categories
-                        </Label>
-                        <Select
-                          id="blog-edit-category"
-                          isClearable={false}
-                          theme={selectThemeColors}
-                          value={blogCategories}
-                          isMulti
-                          name="colors"
-                          options={categoriesSingle}
-                          className="react-select"
-                          classNamePrefix="select"
-                          onChange={data => setBlogCategories(data)}
-                        />
+                      <Label className="form-label" for="blog-edit-category">
+                        Select Categories
+                      </Label>
+                      <Select
+                        id="blog-edit-category"
+                        isClearable={false}
+                        theme={selectThemeColors}
+                        value={selectedCategories}
+                        isMulti
+                        options={categoriesOptions}
+                        className="react-select"
+                        classNamePrefix="select"
+                        onChange={data => setSelectedCategories(data)}
+                      />
                       </Col>
 
                       <Col sm="12" className="mb-2 ">
