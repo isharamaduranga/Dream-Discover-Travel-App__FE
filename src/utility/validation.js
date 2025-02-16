@@ -78,7 +78,8 @@ export const validatePlaceDetails = (state) => {
 }
 
 export const validatePlaceSearchDetails = (state) => {
-  if (state.tag.trim() === "") {
+  const tag = state.tag ? state.tag.toString().trim() : ""
+  if (tag === "") {
     toast.error("Please select valid category type")
     return false
   }
