@@ -13,27 +13,81 @@ import { Button, CardText, CardTitle, Col, Form, Input, Label, Row } from "react
 // ** Styles
 import "@styles/react/pages/page-authentication.scss"
 import { Assets } from "@src/assets/images"
-import { useState } from "react"
-import { HOME_PATH } from "@src/router/routes/route-constant"
+import { useEffect, useState } from "react";
+import { ADMIN_PATH, HOME_PATH } from "@src/router/routes/route-constant";
 import { IS_LOGIN, USER_LOGIN_DETAILS } from "@src/router/RouteConstant";
 import { validateLoginDetails } from "@src/utility/validation"
 import SpinnerComponent from "@components/spinner/Fallback-spinner"
 import { loginExistingClient } from "@src/services/user"
 import toast from "react-hot-toast"
+import themeConfig from "@configs/themeConfig";
 
+
+// ** Google Maps API Key (Replace with your actual key)
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 const Login = () => {
 
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const [location, setLocation] = useState({ latitude: null, longitude: null })
   const [form, setForm] = useState({
     username: "",
     password: ""
   })
 
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          })
+        },
+        error => {
+          console.error("Error fetching location: ", error)
+          toast.error("Unable to retrieve location")
+        }
+      )
+    } else {
+      toast.error("Geolocation is not supported by this browser.")
+    }
+  }, [])
+
+  // ** Fetch location using Google Geolocation API
+  // const fetchLocation = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `https://www.googleapis.com/geolocation/v1/geolocate?key=${GOOGLE_MAPS_API_KEY}`,
+  //       { method: "POST" }
+  //     )
+  //     const data = await response.json()
+  //
+  //     if (data.location) {
+  //       setLocation({
+  //         latitude: data.location.lat,
+  //         longitude: data.location.lng
+  //       })
+  //     } else {
+  //       toast.error("Unable to retrieve accurate location from Google API.")
+  //     }
+  //   } catch (error) {
+  //     console.error("Google Maps API Error:", error)
+  //     toast.error("Error fetching location. Check API key and internet connection.")
+  //   }
+  // }
+  //
+  // useEffect(() => {
+  //   fetchLocation()
+  // }, [])
+
   const createLoginUser = form => {
     return {
       username: form.username ?? null,
-      password: form.password ?? null
+      password: form.password ?? null,
+      latitude: location.latitude,
+      longitude: location.longitude
     }
   }
 
@@ -56,11 +110,23 @@ const Login = () => {
             const userData = {
               user_id:response.data.id,
               username:response.data.username,
-              email:response.data.email
+              userRole:response.data.userRole,
+              email:response.data.email,
+              latitude: location.latitude,
+              longitude: location.longitude
             }
-            localStorage.setItem(IS_LOGIN, "USER")
+
             localStorage.setItem(USER_LOGIN_DETAILS, JSON.stringify(userData))
-            navigate(HOME_PATH)
+            localStorage.setItem(IS_LOGIN, response.data.userRole.toUpperCase())
+
+            // Check user role and navigate accordingly
+            if (userData.userRole === "admin") {
+
+              navigate(ADMIN_PATH) // Navigate to Admin Dashboard
+              //window.location.reload();
+            } else {
+              navigate(HOME_PATH) // Navigate to User Dashboard
+            }
             toast.success(response.message)
           } else {
             toast.error(response.message)
