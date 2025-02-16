@@ -34,7 +34,7 @@ import {
 // ** Styles
 import "@styles/base/pages/page-blog.scss"
 import Rating from "react-rating"
-import { getPlaceByPlaceId, updateRateScoreInPlaceWithFeedback } from "@src/services/place"
+import { getPlaceByPlaceId } from "@src/services/place"
 import moment from "moment/moment"
 import { USER_LOGIN_DETAILS } from "@src/router/RouteConstant"
 import { badgeColorsArr } from "@src/utility/text_details"
@@ -42,14 +42,27 @@ import { validateCommentDetails } from "@src/utility/validation"
 import { createNewComment } from "@src/services/user"
 import toast from "react-hot-toast"
 import LoadingSpinner from "@components/spinner/Loading-spinner"
+import ApexDonutChart from "@src/views/apex/ApexDonutChart"
+
+// ** Styles
+import '@styles/react/libs/charts/apex-charts.scss'
+import '@styles/react/libs/flatpickr/flatpickr.scss'
+import RouteMap from "@src/views/map_route/RouteMap"
+
 
 const BlogDetails = () => {
+
+  
   // ** States
   const [data, setData] = useState(null)
   const [displayedComments, setDisplayedComments] = useState(2)
   const [cardId, setCardId] = useState(null)
   const [loggedUser, setLoggedUser] = useState(null)
   const [loading, setLoading] = useState(false)
+
+  const [originCoords, setOriginCoords] = useState(null)
+  const [destinationName, setDestinationName] = useState('colombo')
+
   const [form, setForm] = useState({
     comment_text: "",
     email: "",
@@ -59,17 +72,30 @@ const BlogDetails = () => {
   })
   console.log(form)
 
+// ** Load User Details and Coordinates from Local Storage
   useEffect(() => {
-    // Fetch the logged-in user details from local storage
     const storedUserDetails = localStorage.getItem(USER_LOGIN_DETAILS)
-    const user = storedUserDetails ? JSON.parse(storedUserDetails) : null
-    setLoggedUser(user)
+    if (storedUserDetails) {
+      const user = JSON.parse(storedUserDetails)
+      setLoggedUser(user)
 
+      if (user.latitude && user.longitude) {
+        setOriginCoords({
+          lat: parseFloat(user.latitude),
+          lng: parseFloat(user.longitude)
+        })
+      }
+    }
+  }, [])
+
+
+  useEffect(() => {
     // Extract the cardId from the URL
     const extractedCardId = window.location.pathname.split("/").pop()
     setCardId(extractedCardId)
 
     fetchPlaceById(extractedCardId)
+
   }, [])
 
   useEffect(() => {
@@ -79,6 +105,7 @@ const BlogDetails = () => {
       user_id: loggedUser?.user_id || ""
     }))
   }, [cardId, loggedUser])
+
 
   const handleFormChange = (e) => {
     const { name, value } = e.target
@@ -104,25 +131,13 @@ const BlogDetails = () => {
       if (response.status === 200) {
         console.log(response.data.data)
         setData(response.data.data[0])
+        setDestinationName(response.data ? `${response.data.data[0].title}` : "colombo")
       } else {
         console.error("Error fetching places:", response.message)
       }
     } catch (error) {
       console.error("An error occurred:", error)
     }
-  }
-  function updateRateScore(placeId) {
-    updateRateScoreInPlaceWithFeedback(placeId)
-      .then((response) => {
-        console.log('response ----------->', response)
-        if (response.status === 200) {
-          fetchPlaceById(placeId)
-          toast.success('Updating Rating Score ...')
-        }
-      })
-      .catch((error) => {
-        console.error("API Request Error:", error.message)
-      })
   }
 
   function addNewCommentApiHandler() {
@@ -134,7 +149,7 @@ const BlogDetails = () => {
             toast.success(response.message)
             // After successfully adding a comment, fetch updated place details
             fetchPlaceById(cardId)
-            updateRateScore(cardId)
+            //updateRateScore(cardId)
           }
           clearForm()
         })
@@ -191,6 +206,8 @@ const BlogDetails = () => {
     ))
   }
 
+    console.log(`destination name => ${destinationName} /   originCoords => ${originCoords}`)
+
   return (
     <Fragment>
       <Breadcrumbs title="Place Details" data={[{ title: "Place" }, { title: "Details" }]} />
@@ -199,78 +216,82 @@ const BlogDetails = () => {
           <div className="content-body">
             {data !== null ? (
               <Row>
-                <Col sm="12">
-                  <Card className="mb-2">
-                    {/*className="img-fluid"*/}
-                    <CardImg src={data.img} height={700} top />
-                    <CardBody>
-                      <CardTitle tag="h4">{data.title}</CardTitle>
-                      <div className="d-flex">
-                        <Avatar className="me-50" img={data.user_image} imgHeight="50" imgWidth="50" />
-                        <div className={"mt-1"}>
-                          <small className="text-muted me-25 fs-5">by</small>
-                          <small className={"fs-5"}>
-                            <a className="text-body" href="/" onClick={e => e.preventDefault()}>
-                              {data.user_full_name}
-                            </a>
-                          </small>
-                          <span className="text-muted ms-50 me-25 fw-bold">|</span>
-                          <small className="text-muted fs-5">{moment(data.posted_date).format("lll")}</small>
-                        </div>
-                      </div>
-                      <div className="my-1 py-25">{renderTags()}</div>
 
-                      <div className={"mt-1 mb-2"}>
-                        <span>Ratings<br /></span>
-                        <Rating
-                          readonly
-                          direction={""}
-                          initialRating={data.rating_score}
-                          emptySymbol={<Star size={25} fill="#babfc7" stroke="#babfc7" />}
-                          fullSymbol={<Star size={25} fill={"#ffc107"} stroke={"#ffc107"} />}
+                <Col sm="12">
+                  <Card className="mb-4 shadow-sm border-0">
+                    <CardImg src={data.img} className="w-100 rounded-top" style={{ maxHeight: "500px", objectFit: "cover" }} />
+                    <CardBody>
+                      {/* Title & User Info */}
+                      <h1 className="fw-bold text-primary mb-2">{data.title}</h1>
+                      <hr />
+                      {/* Ratings & Chart */}
+                      <Row className="gy-3">
+                        <Col md="6">
+                          <div className="d-flex align-items-center mb-3">
+                            <Avatar img={data.user_image} imgHeight="65" imgWidth="65" className="me-1" />
+                            <div>
+                              <p className="text-muted me-1">by</p>
+                              <a className="fw-bold text-dark" href="/" onClick={e => e.preventDefault()}>
+                                {data.user_full_name}
+                              </a>
+                              <span className="text-muted"> | </span>
+                              <small className="text-muted">{moment(data.posted_date).format("lll")}</small>
+                            </div>
+                          </div>
+
+                          {/* Tags */}
+                          <div className="mb-2">{renderTags()}</div>
+                          <div>
+                            <span className="fw-bold">Ratings</span>
+                            <br />
+                            <Rating
+                              readonly
+                              initialRating={data.rating_score}
+                              emptySymbol={<Star size={25} fill="#babfc7" stroke="#babfc7" />}
+                              fullSymbol={<Star size={25} fill="#ffc107" stroke="#ffc107" />}
+                            />
+                          </div>
+                          {/* Content */}
+                          <CardText className="mt-3 text-muted"
+                                    dangerouslySetInnerHTML={{ __html: data.content }}></CardText>
+
+                        </Col>
+
+                        <Col md="6">
+                          <ApexDonutChart />
+                        </Col>
+                      </Row>
+                      <div>
+
+                        <h1>Route Map</h1>
+                        <RouteMap
+                          originCoords={originCoords}
+                          destinationName={destinationName}
                         />
                       </div>
-
-                      <div className="d-flex">
-                        <div>
-                          <CardText className="m-1">
-                            <div
-                              dangerouslySetInnerHTML={{
-                                __html: data.content
-                              }}
-                            ></div>
-                          </CardText>
-                        </div>
-                      </div>
-                      <hr className="my-2" />
+                      <hr />
+                      {/* Actions */}
                       <div className="d-flex align-items-center justify-content-between">
-                        <div className="d-flex align-items-center">
-                          <div className="d-flex align-items-center me-1">
-                            <a className="me-50" href="/" onClick={e => e.preventDefault()}>
-                              <MessageSquare size={21} className="text-body align-middle" />
-                            </a>
-                            <a href="/" onClick={e => e.preventDefault()}>
-                              <div className="text-body align-middle">{kFormatter(data.comments.length)}</div>
-                            </a>
-                          </div>
-                          <div className="d-flex align-items-center">
-                            <a className="me-50" href="/" onClick={e => e.preventDefault()}>
-                              <Bookmark size={21} className="text-body align-middle" />
-                            </a>
-                            <a href="/" onClick={e => e.preventDefault()}>
-                              <div className="text-body align-middle">{"10"}</div>
-                            </a>
-                          </div>
+                        <div className="d-flex">
+                          <Button color="light" className="me-2 d-flex align-items-center">
+                            <MessageSquare size={20} className="me-1" />
+                            {kFormatter(data.comments.length)}
+                          </Button>
+                          <Button color="light" className="me-2 d-flex align-items-center">
+                            <Bookmark size={20} className="me-1" />
+                            10
+                          </Button>
                         </div>
-                        <UncontrolledDropdown className="dropdown-icon-wrapper">
-                          <DropdownToggle tag="span">
-                            <Share2 size={21} className="text-body cursor-pointer" />
+                        <UncontrolledDropdown>
+                          <DropdownToggle tag="span" className="cursor-pointer">
+                            <Share2 size={21} className="text-body" />
                           </DropdownToggle>
                         </UncontrolledDropdown>
                       </div>
                     </CardBody>
                   </Card>
                 </Col>
+
                 {
                   loading === true ? (
                     <LoadingSpinner />
