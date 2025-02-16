@@ -32,6 +32,17 @@ export async function getPlaceByPlaceId(placeId) {
   return await ApiService.callApi(apiObject)
 }
 
+export async function getPlaceByCategoryId(categoryId) {
+  const apiObject = {}
+  apiObject.method = "GET"
+  apiObject.authentication = false
+  apiObject.endpoint = `categories/${categoryId}/places`
+  apiObject.isBasicAuth = false
+  apiObject.urlencoded = false
+  return await ApiService.callApi(apiObject)
+}
+
+
 export async function updateRateScoreInPlaceWithFeedback(placeId) {
   const apiObject = {}
   apiObject.method = "POST"
