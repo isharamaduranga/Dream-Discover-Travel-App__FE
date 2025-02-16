@@ -1,8 +1,15 @@
 // Logo Import
 import logo from "@src/assets/images/logo/logo.ico"
 
-// You can customize the template with the help of this file
 
+// You can customize the template with the help of this file
+// Get user data from localStorage
+
+const getUserData = () => {
+  const userData = localStorage.getItem("ISLOGIN")
+  return userData ? userData : null
+}
+getUserData()
 //Template config options
 const themeConfig = {
   app: {
@@ -15,8 +22,10 @@ const themeConfig = {
     type: "vertical", // vertical, horizontal
     contentWidth: "full", // full, boxed
     menu: {
-      isHidden: true,
-      isCollapsed: true
+      get isHidden() {
+        return localStorage.getItem("ISLOGIN") !== 'ADMIN' // Dynamically check localStorage
+      },
+      isCollapsed: false
     },
     navbar: {
       // ? For horizontal menu, navbar type will work for navMenu type
