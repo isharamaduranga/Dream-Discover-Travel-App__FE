@@ -38,6 +38,10 @@ export const validateRegisterDetails = (state) => {
   return true
 }
 export const validateCommentDetails = (state) => {
+  if (!state.static_rating || state.static_rating < 1 || state.static_rating > 5) {
+    toast.error("Please provide a valid rating between 1 and 5")
+    return false
+  }
   if (state.name.trim() === "" || !NAME_REGEX.test(state.name)) {
     toast.error("Please enter valid user name")
     return false
