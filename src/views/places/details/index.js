@@ -1,5 +1,5 @@
 // ** React Imports
-import React, { Fragment, useEffect, useState } from "react"
+import React, { Fragment, useContext, useEffect, useState } from "react"
 
 // ** Third Party Components
 import classnames from "classnames"
@@ -48,11 +48,18 @@ import ApexDonutChart from "@src/views/apex/ApexDonutChart"
 import '@styles/react/libs/charts/apex-charts.scss'
 import '@styles/react/libs/flatpickr/flatpickr.scss'
 import RouteMap from "@src/views/map_route/RouteMap"
-
+// import { useRTL } from "@hooks/useRTL"
+// import { ThemeColors } from "@src/utility/context/ThemeColors"
+import { animateScroll as scroll } from 'react-scroll'
 
 const BlogDetails = () => {
 
-  
+  // ** Hooks
+  // const [isRtl] = useRTL()
+  //
+  // // ** Context
+  // const themeColors = useContext(ThemeColors)
+
   // ** States
   const [data, setData] = useState(null)
   const [displayedComments, setDisplayedComments] = useState(2)
@@ -62,14 +69,17 @@ const BlogDetails = () => {
 
   const [originCoords, setOriginCoords] = useState(null)
   const [destinationName, setDestinationName] = useState('colombo')
+  const [sentimentCounts, setSentimentCounts] = useState([0, 0, 0])
 
   const [form, setForm] = useState({
     comment_text: "",
     email: "",
     name: "",
+    static_rating: 0, //add new property static_rating
     place_id: "",
     user_id: ""
   })
+
   console.log(form)
 
 // ** Load User Details and Coordinates from Local Storage
@@ -120,7 +130,8 @@ const BlogDetails = () => {
       ...prevState,
         comment_text: '',
         name: '',
-        email: ''
+        email: '',
+        static_rating: 0
 
     }))
   }
@@ -130,8 +141,24 @@ const BlogDetails = () => {
       const response = await getPlaceByPlaceId(cardId)
       if (response.status === 200) {
         console.log(response.data.data)
+        const placeData = response.data.data[0]  // <-- Define placeData first
         setData(response.data.data[0])
         setDestinationName(response.data ? `${response.data.data[0].title}` : "colombo")
+
+        // Safely parse sentiment counts as numbers
+        const {
+          positive_sentiment_count = 0,
+          negative_sentiment_count = 0,
+          neutral_sentiment_count = 0
+        } = placeData
+
+        // Convert them to integers to avoid NaN
+        const pos = parseInt(positive_sentiment_count) || 0
+        const neg = parseInt(negative_sentiment_count) || 0
+        const neu = parseInt(neutral_sentiment_count) || 0
+
+        setSentimentCounts([pos, neu, neg]) // Order: [Positive, Neutral, Negative]
+
       } else {
         console.error("Error fetching places:", response.message)
       }
@@ -147,6 +174,12 @@ const BlogDetails = () => {
         .then((response) => {
           if (response.data) {
             toast.success(response.message)
+
+            // Scroll up smoothly to the chart section after comment creation
+            scroll.scrollTo(document.getElementById("chart-section").offsetTop - 100, {
+              duration: 800,
+              smooth: "easeInOutQuad"
+            })
             // After successfully adding a comment, fetch updated place details
             fetchPlaceById(cardId)
             //updateRateScore(cardId)
@@ -257,8 +290,8 @@ const BlogDetails = () => {
 
                         </Col>
 
-                        <Col md="6">
-                          <ApexDonutChart />
+                        <Col md="6" id="chart-section">
+                          <ApexDonutChart seriesData={sentimentCounts} />
                         </Col>
                       </Row>
                       <div>
@@ -319,7 +352,24 @@ const BlogDetails = () => {
                     <CardBody>
                       <Form className="form" onSubmit={e => e.preventDefault()}>
                         <Row>
-                          <Col sm="6">
+                          <Col sm="3">
+                            <Rating
+                              initialRating={form.static_rating} // Use form state for persistent rating
+                              emptySymbol={<Star size={25} fill="#babfc7" stroke="#babfc7" />}
+                              fullSymbol={<Star size={25} fill="#ffc107" stroke="#ffc107" />}
+                              onClick={(value) => {
+                                setForm((prevForm) => ({
+                                  ...prevForm,
+                                  static_rating: value // Persist rating in form state
+                                }))
+                              }}
+                            />
+                            <div className='counter-wrapper mt-1'>
+                              <span className='fw-bold'>Ratings: {form.static_rating}</span> {/* Display from form.static_rating */}
+                            </div>
+                          </Col>
+
+                          <Col sm="5">
                             <div className="mb-2">
                               <Input
                                 placeholder="Name"
@@ -330,7 +380,7 @@ const BlogDetails = () => {
                               />
                             </div>
                           </Col>
-                          <Col sm="6">
+                          <Col sm="4">
                             <div className="mb-2">
                               <Input
                                 type="email"
@@ -341,7 +391,7 @@ const BlogDetails = () => {
                               />
                             </div>
                           </Col>
-                          <Col sm="12">
+                          <Col sm="12" className={'mt-2'}>
                             <div className="mb-2">
                               <Input
                                 className="mb-2"

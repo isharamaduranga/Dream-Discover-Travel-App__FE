@@ -26,7 +26,7 @@ import { getPlaceByCategoryId } from "@src/services/place"
     const [placesOptions, setPlacesOptions] = useState([])
     const [selectedPlace, setSelectedPlace] = useState(null)
     const [dateRange, setDateRange] = useState([
-      new Date(new Date().setDate(new Date().getDate() - 15)),
+      new Date(new Date().setDate(new Date().getDate() - 16)),
       new Date()
     ])
     const [chartData, setChartData] = useState({

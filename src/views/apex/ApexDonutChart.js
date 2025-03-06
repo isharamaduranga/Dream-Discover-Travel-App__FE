@@ -3,14 +3,13 @@ import Chart from 'react-apexcharts'
 
 // ** Reactstrap Imports
 import { Card, CardHeader, CardTitle, CardBody, CardSubtitle } from 'reactstrap'
+import PropTypes from "prop-types";
 
-const ApexRadiarChart = () => {
+const ApexDonutChart = ({ seriesData }) => {
   const donutColors = {
-    series1: '#eab01d',
-    series2: '#22b910',
-    series3: '#826bf8',
-    series4: '#2b9bf4',
-    series5: '#f35f5f'
+    positive: '#22b910',
+    neutral: '#2b9bf4',
+    negative: '#f35f5f'
   }
 
   // ** Chart Options
@@ -26,7 +25,7 @@ const ApexRadiarChart = () => {
 
     //labels: [`${85} - Positive`, `${16} - Neutral`, `${50} - Negative`],
 
-    colors: [donutColors.series2, donutColors.series4, donutColors.series5],
+    colors: [donutColors.positive, donutColors.neutral, donutColors.negative],
     dataLabels: {
       enabled: true,
       formatter(val) {
@@ -54,7 +53,7 @@ const ApexRadiarChart = () => {
               fontSize: '1.5rem',
               label: 'Total Reviews',
               formatter() {
-                return `${165}`
+                return seriesData.reduce((a, b) => a + b, 0)
               }
             }
           }
@@ -111,10 +110,14 @@ const ApexRadiarChart = () => {
         <CardTitle className={'text-center'} >
           Travellers Review Ratings
         </CardTitle>
-        <Chart options={options} series={series} type='donut' height={350} />
+        <Chart options={options} series={seriesData} type='donut' height={350} />
       </CardBody>
     </Card>
   )
 }
+// ** Prop-Types
+ApexDonutChart.propTypes = {
+  seriesData: PropTypes.arrayOf(PropTypes.number).isRequired
+}
 
-export default ApexRadiarChart
+export default ApexDonutChart
