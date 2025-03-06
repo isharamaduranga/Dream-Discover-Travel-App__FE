@@ -28,6 +28,7 @@ const Home = lazy(() => import("../../views/home"))
 const Places = lazy(() => import("../../views/places/list/index"))
 const PlacesWithFilter = lazy(() => import("../../views/places/list/filterPlace"))
 const PlaceDetails = lazy(() => import('../../views/places/details'))
+const PendingPlaceDetails = lazy(() => import('../../views/admin/pendingPlaceDetails'))
 const PlaceEdit = lazy(() => import('../../views/places/edit'))
 const Categories = lazy(() => import("../../views/categories/categories"))
 const Category = lazy(() => import("../../views/category/category"))
@@ -37,6 +38,7 @@ const Register = lazy(() => import("../../views/Register"))
 const ForgotPassword = lazy(() => import("../../views/ForgotPassword"))
 const AdminPortal = lazy(() => import("../../views/admin/AdminPortal"))
 const ManagePlace = lazy(() => import("../../views/admin/ManagePlace"))
+const MyPlans = lazy(() => import("../../views/places/my_plan/MyPlan"))
 
 // ** Merge Routes
 const Routes = [
@@ -60,6 +62,10 @@ const Routes = [
   {
     path: '/pages/blog/detail/:id',
     element: <PlaceDetails />
+  },
+  {
+    path: '/manage-place/pages/pending-place/detail/:id',
+    element: <PendingPlaceDetails />
   },
   {
     path: '/pages/blog/detail',
@@ -114,6 +120,10 @@ const Routes = [
   {
     path: constant.MANAGE_PLACE_PATH,
     element: <ManagePlace />
+  },
+  {
+    path: constant.MY_PLAN,
+    element: <MyPlans />
   }
 ]
 
