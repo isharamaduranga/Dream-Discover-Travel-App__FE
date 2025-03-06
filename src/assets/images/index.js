@@ -1,6 +1,7 @@
 
 import banner from '../images/home/banner.png'
 import logo from '../images/logo/logo.ico'
+import nomore from '../images/logo/nomore.png'
 import facebook from './home/facebook-icon.png'
 import instagram from './home/instagram-icon.png'
 import twitter from './home/twitter-icon.png'
@@ -29,6 +30,7 @@ import emptyImg from './home/empty.jpg'
 
 export const Assets = {
   logo:logo,
+  nomore:nomore,
   banner:banner,
   facebook:facebook,
   instagram:instagram,
