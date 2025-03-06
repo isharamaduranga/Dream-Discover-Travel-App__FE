@@ -5,9 +5,9 @@ import { Col, Row } from "reactstrap"
 import themeConfig from "@configs/themeConfig"
 import {
   ADD_NEW_PLACE_PATH, CATEGORIES_PATH,
-  HOME_PATH,
+  HOME_PATH, MY_PLAN,
   PLACES_PATH
-} from "@src/router/routes/route-constant"
+} from "@src/router/routes/route-constant";
 import { Link } from "react-router-dom"
 import "../../../../main.scss"
 import { routePathHandler } from "@store/routePath"
@@ -106,16 +106,31 @@ const ThemeNavbar = (props) => {
                 </Link>
 
                 {userStatus === "USER" || userStatus === "ADMIN" ? (
-                  <Link
-                    to={ADD_NEW_PLACE_PATH}
-                    className={`top-wrapper ${windowPath === ADD_NEW_PLACE_PATH ? "top-wrapper-active" : ""}`}
-                    onClick={() => setWindowPathHandler(ADD_NEW_PLACE_PATH)}
-                  >
-                    <div className={"nav_itm"}>
-                      <PlusCircle />
-                      <p>Add New Place</p>
-                    </div>
-                  </Link>
+                  <>
+                    <Link
+                      to={ADD_NEW_PLACE_PATH}
+                      className={`top-wrapper ${windowPath === ADD_NEW_PLACE_PATH ? "top-wrapper-active" : ""}`}
+                      onClick={() => setWindowPathHandler(ADD_NEW_PLACE_PATH)}
+                    >
+                      <div className={"nav_itm"}>
+                        <PlusCircle />
+                        <p>Add New Place</p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to={MY_PLAN}
+                      className={`top-wrapper ${windowPath === MY_PLAN ? "top-wrapper-active" : ""}`}
+                      onClick={() => setWindowPathHandler(MY_PLAN)}
+                    >
+                      <div className={"nav_itm"}>
+                        <MapPin />
+                        <p>Create Travel Plan</p>
+                      </div>
+                    </Link>
+
+                  </>
+
                 ) : (
                   <Link
                     to={LOGIN_PATH}
