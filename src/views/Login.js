@@ -123,8 +123,9 @@ const Login = () => {
             if (userData.userRole === "admin") {
 
               navigate(ADMIN_PATH) // Navigate to Admin Dashboard
-              //window.location.reload();
+              window.location.reload()
             } else {
+
               navigate(HOME_PATH) // Navigate to User Dashboard
             }
             toast.success(response.message)
