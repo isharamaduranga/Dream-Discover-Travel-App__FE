@@ -22,6 +22,17 @@ export async function getAllPlaces() {
 }
 
 
+export async function getAllPendingPlaces() {
+  const apiObject = {}
+  apiObject.method = "GET"
+  apiObject.authentication = false
+  apiObject.endpoint = "places/pending-inactive"
+  apiObject.isBasicAuth = false
+  apiObject.urlencoded = false
+  return await ApiService.callApi(apiObject)
+}
+
+
 export async function getPlaceByPlaceId(placeId) {
   const apiObject = {}
   apiObject.method = "GET"
@@ -71,6 +82,17 @@ export async function searchPlaceByTag_Min_Max(placeDetails) {
   apiObject.isBasicAuth = false
   apiObject.urlencoded = false
   apiObject.multipart = true
+  apiObject.body = placeDetails
+  return await ApiService.callApi(apiObject)
+}
+
+export async function changeStatus(placeDetails) {
+  const apiObject = {}
+  apiObject.method = "PATCH"
+  apiObject.authentication = false
+  apiObject.endpoint = "places/change-status"
+  apiObject.multipart = false
+  apiObject.urlencoded = false
   apiObject.body = placeDetails
   return await ApiService.callApi(apiObject)
 }
