@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { getAllPlaces } from "@src/services/place"
-import { Badge, Card, CardBody, CardImg, CardText, CardTitle, Col } from "reactstrap"
+import { Badge, Card, CardBody, CardImg, CardText, CardTitle, Col, Row } from "reactstrap"
 import classnames from "classnames"
 import { badgeColorsArr } from "@src/utility/text_details"
 import { Link, useLocation } from "react-router-dom"
@@ -14,102 +13,106 @@ const SearchPlace = () => {
   const location = useLocation()
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (location.state && location.state.searchData) {
-        setData(location.state.searchData)
-        setLoading(false)
-      } else {
-        try {
-          const response = await getAllPlaces()
-          if (response.status === 200) {
-            setData(response.data.data || [])
-          } else {
-            console.error("Error fetching places:", response.message)
-          }
-        } catch (error) {
-          console.error("An error occurred while fetching places:", error)
-        } finally {
-          setLoading(false)
-        }
-      }
+    console.log("Location State:", location.state) // Debugging: Log the entire location.state
+    if (location.state?.searchData) {
+      console.log("Received Data:", location.state.searchData) // Debugging: Log the received data
+      setData(location.state.searchData)
+      setLoading(false)
+    } else {
+      console.log("No searchData found in location.state") // Debugging: Log if no data is found
+      setData([])
+      setLoading(false)
     }
-    fetchData()
   }, [location.state])
 
-  const renderRenderList = () => {
-    return data.map(item => {
-      const renderTags = () => {
-        return item.tags.map((tag, index) => {
-          return (
-            <a key={index} href="/" onClick={e => e.preventDefault()}>
-              <Badge
-                className={classnames({
-                  "me-50": index !== item.tags.length - 1
-                })}
-                color={badgeColorsArr[tag]}
-                pill
-              >
-                {tag}
-              </Badge>
-            </a>
-          )
-        })
-      }
+  const renderPlaceCards = () => {
+    return data.map((item) => (
+      <Col key={item.id} md="4" className="mb-1">
+        <Card>
+          <Link to={`/pages/blog/detail/${item.id}`}>
+            <CardImg
+              top
+              src={item.image}
+              alt={item.title}
+              style={{
+                height: "250px",
+                objectFit: "cover",
+                borderBottom: "3px solid #eee"
+              }}
+            />
+          </Link>
+          <CardBody>
+            <CardTitle tag="h3">
+              <Link to={`/pages/blog/detail/${item.id}`} className="blog-title-truncate">
+                {item.title}
+              </Link>
+            </CardTitle>
+            <div className="d-flex align-items-center mb-2">
+              <Avatar
+                className="me-50"
+                img={item.user_image}
+                imgHeight="30"
+                imgWidth="30"
+              />
+              <div>
+                <small className="text-muted me-25">by</small>
+                <small className="fw-bold">
+                  {item.user_full_name}
+                </small>
+                <span className="mx-50">|</span>
+                <small className="text-secondary">
+                  {moment(item.posted_date).format("lll")}
+                </small>
+              </div>
+            </div>
 
-      return (
-        <Col key={item.id} md="4">
-          <Card>
-            <Link to={`/pages/blog/detail/${item.id}`}>
-              <CardImg className="img-fluid" src={item.img} alt={item.title} top />
-            </Link>
-            <CardBody>
-              <CardTitle tag="h3">
-                <Link className="blog-title-truncate text-body-heading" to={`/pages/blog/detail/${item.id}`}>
-                  {item.title}
-                </Link>
-              </CardTitle>
-              <div className="d-flex">
-                <Avatar className="me-50" img={item.user_image} imgHeight="25" imgWidth="25" />
-                <div>
-                  <small className="text-muted fw-bold me-25">by</small>
-                  <small className={"fw-bold"}>
-                    <a className="text-body" href="/" onClick={e => e.preventDefault()}>
-                      {item.user_full_name}
-                    </a>
-                  </small>
-                  <span className="text-dark ms-50 me-25">|</span>
-                  <small className="text-secondary fw-bold">{moment(item.posted_date).format("lll")}</small>
-                </div>
+            <div className="my-1 py-25">
+              {item.category?.map((cat, index) => (
+                <Badge
+                  key={index}
+                  className={classnames({ "me-50": index !== item.category.length - 1 })}
+                  color={badgeColorsArr[cat]}
+                  pill
+                >
+                  {cat}
+                </Badge>
+              ))}
+            </div>
+            <CardText className="blog-content-truncate">
+              {item.content?.split(" ").slice(0, 15).join(" ") || "No description available"}...
+            </CardText>
+            <hr />
+            <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex align-items-center">
+                <MessageSquare size={16} className="me-50" />
+                <span className="fw-bold">
+                  {item.comments_count} Comments
+                </span>
               </div>
-              <div className="my-1 py-25">{renderTags()}</div>
-              <CardText className="blog-content-truncate">{item.content.split(" ").slice(0, 10).join(" ")}...</CardText>
-              <hr />
-              <div className="d-flex justify-content-between align-items-center">
-                <Link to={`/pages/blog/detail/${item.id}`}>
-                  <MessageSquare size={15} className="text-body me-50" />
-                  <span className="text-body fw-bold">{item.comments.length} Comments</span>
-                </Link>
-                <Link className="fw-bold" to={`/pages/blog/detail/${item.id}`}>
-                  Read More
-                </Link>
-              </div>
-            </CardBody>
-          </Card>
-        </Col>
-      )
-    })
+              <Link to={`/pages/blog/detail/${item.id}`} className="fw-bold">
+                Read More
+              </Link>
+            </div>
+          </CardBody>
+        </Card>
+      </Col>
+    ))
   }
 
   return (
-    <div>
+    <div className="container mt-4">
       {loading ? (
-        <p>Loading...</p>
-      ) : data.length === 0 ? (
-        <h5 className={'d-flex justify-content-center align-items-center mt-5 pst-5'}>No search results found 😥</h5>
-      ) : (
-        <div className="row justify-content-center">
-          {renderRenderList()}
+        <div className="text-center my-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
         </div>
+      ) : data.length === 0 ? (
+        <div className="text-center my-5 py-5">
+          <h4>No places found matching your criteria</h4>
+        </div>
+      ) : (
+        <Row className={'d-flex justify-content-center align-content-center flex-wrap'}>{renderPlaceCards()}</Row>
       )}
     </div>
   )

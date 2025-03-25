@@ -12,25 +12,25 @@ const StatsCard = ({ cols }) => {
   const data = [
 
     {
-      title: '300',
+      title: '8',
       subtitle: 'Users',
       color: 'light-info',
       icon: <User size={24} />
     },
     {
-      title: '180',
+      title: '10',
       subtitle: 'Places',
       color: 'light-danger',
       icon: <MapPin size={24} />
     },
     {
-      title: '10',
+      title: '6',
       subtitle: 'Categories',
       color: 'light-warning',
       icon: <Box size={24} />
     },
     {
-      title: '10',
+      title: '21',
       subtitle: 'Reviews',
       color: 'light-success',
       icon: <MessageCircle size={24} />

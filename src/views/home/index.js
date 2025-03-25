@@ -8,17 +8,26 @@ import { useRTL } from "@hooks/useRTL"
 import "@styles/react/libs/swiper/swiper.scss"
 import FooterPage from "@src/views/home/footer/footer"
 import Select from "react-select"
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { PLACES_PATH, PLACES_PATH_FILTER } from "@src/router/routes/route-constant";
+import { PLACES_PATH_FILTER } from "@src/router/routes/route-constant"
 import { validatePlaceSearchDetails } from "@src/utility/validation"
 import { searchPlaceByTag_Min_Max } from "@src/services/place"
-import { getAllCategory } from "@src/services/category";
+import { getAllCategory } from "@src/services/category"
 
 const Home = () => {
 
   const [isRtl] = useRTL()
   const navigate = useNavigate()
+  const [categoriesOptions, setCategoriesOptions] = useState([])
+  const [form, setForm] = useState({
+    tag: "",
+    minscore: "",
+    maxscore: "",
+    sort_by: "",
+    sentiment_filter: ""
+  })
+
   const divStyle = {
     background: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${Assets.banner})`,
     backgroundSize: "cover",
@@ -31,14 +40,7 @@ const Home = () => {
     alignItems: "center"
   }
 
-  const [form, setForm] = useState({
-    tag: "",
-    minscore: "",
-    maxscore: ""
-  })
-// State to hold fetched categories
-  const [categoriesOptions, setCategoriesOptions] = useState([])
-
+  // Rating options
   const ratingRanges = [
     { value: { minscore: 4.0, maxscore: 5.0 }, label: "5 Star" },
     { value: { minscore: 3.0, maxscore: 4.0 }, label: "4 Star" },
@@ -47,17 +49,33 @@ const Home = () => {
     { value: { minscore: 0.0, maxscore: 1.0 }, label: "1 Star" }
   ]
 
-  // Fetch categories from API
+  // Sort options
+  const sortOptions = [
+    { value: "most_reviewed", label: "Most Reviewed" },
+    { value: "most_popular", label: "Most Popular" },
+    { value: "most_engaged", label: "Most Engaged" },
+    { value: "most_travel_planned", label: "Most Travel Planned" }
+  ]
+
+  // Sentiment options
+  const sentimentOptions = [
+    { value: "positive", label: "Positive" },
+    { value: "negative", label: "Negative" },
+    { value: "neutral", label: "Neutral" }
+  ]
+
+  // Fetch categories on component mount
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await getAllCategory()
         if (response.status === 200) {
-          const categoriesData = response.data.categories.map((cat) => ({
-            value: cat.id,
-            label: cat.title
-          }))
-          setCategoriesOptions(categoriesData)
+          setCategoriesOptions(
+            response.data.categories.map((cat) => ({
+              value: cat.id,
+              label: cat.title
+            }))
+          )
         }
       } catch (error) {
         console.error("Error fetching categories:", error)
@@ -66,97 +84,119 @@ const Home = () => {
     fetchCategories()
   }, [])
 
-
-  // Handle Category Change
+  // Handlers for form changes
   const handleCategoryChange = (selectedCategory) => {
+    setForm((prev) => ({ ...prev, tag: selectedCategory?.value || "" }))
+  }
+
+  const handleRatingChange = (selectedAccType) => {
     setForm((prev) => ({
       ...prev,
-      tag: selectedCategory ? selectedCategory.value : ""
+      minscore: selectedAccType?.value?.minscore || "",
+      maxscore: selectedAccType?.value?.maxscore || ""
     }))
   }
 
-  const handleAccountTypeChange = (selectedAccType) => {
-    setForm((prev) => ({
-      ...prev,
-      minscore: selectedAccType.value.minscore,
-      maxscore: selectedAccType.value.maxscore
-    }))
+  const handleSentimentChange = (selected) => {
+    setForm((prev) => ({ ...prev, sentiment_filter: selected?.value || "" }))
   }
-  console.log("form print =====================> ", form)
 
-  const createPlaceForSearch = form => {
-    return {
-      tag: form.tag ?? null,
-      minscore: form.minscore ?? null,
-      maxscore: form.maxscore ?? null
-    }
+  const handleSortChange = (selected) => {
+    setForm((prev) => ({ ...prev, sort_by: selected?.value || "" }))
   }
-  const apiHandlerForSearch = () => {
+
+  const apiHandlerForSearch = async () => {
     if (validatePlaceSearchDetails(form)) {
+      const formData = new FormData()
+      Object.entries(form).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== "") {
+          formData.append(key, value)
+        }
+      })
 
-      searchPlaceByTag_Min_Max(createPlaceForSearch(form))
-        .then((response) => {
-          if (response.data) {
-            navigate(PLACES_PATH_FILTER, {
-              state: { searchData: response.data.data } // Pass search results as state
-            })
-          }
-        })
-        .catch((error) => {
-          console.error("API Request Error:", error.message)
-        })
+      try {
+        const response = await searchPlaceByTag_Min_Max(formData)
+        if (response.data) {
+          // Ensure the state object is passed correctly
+          navigate(PLACES_PATH_FILTER, {
+            state: { searchData: response.data.data } // Pass the data here
+          })
+        }
+      } catch (error) {
+        console.error("API Error:", error)
+      }
     }
   }
-
+  
   return (
     <div className="home_page">
 
       {/* HOME BANNER PAGE  */}
       <div className="container-fluid " style={divStyle}>
-        <Row className={"pt-5"}>
+        <Row className={"pt-2"}>
           <h1 className={"text-center text-white"}>Dream Discover</h1>
           <h2 className={"text-center text-white"}> Discovering Your Perfect Destinations</h2>
         </Row>
         <Card className="custom-card">
           <h2 className={"text-center form_head mt-1"}>Search Destination</h2>
           <CardBody>
-            <Form className="form" onSubmit={e => e.preventDefault()}>
+            <Form onSubmit={(e) => e.preventDefault()}>
               <Row>
-                <Col sm="12" className="mb-2">
-                  <Label className="form-label" for="input-name">
-                    Input Category
-                  </Label>
+                {/* Category Filter */}
+                <Col sm="12" className="mb-1">
+                  <Label>Category</Label>
                   <Select
-                    id={`categoryTag`}
-                    className="react-select"
-                    classNamePrefix="select"
-                    value={categoriesOptions.find((item) => item.value === form.tag)}
-                    isClearable={false}
-                    options={categoriesOptions} // Use the dynamically fetched categories
+                    options={categoriesOptions}
+                    value={categoriesOptions.find((c) => c.value === form.tag)}
                     onChange={handleCategoryChange}
-                  />
-                </Col>
-                <Col sm="12" className="mb-2">
-                  <Label className="form-label" for="input-name2">
-                    Select Ratings
-                  </Label>
-                  <Select
-                    id={`ratingType`}
-                    className="react-select"
                     classNamePrefix="select"
-                    value={ratingRanges.find(item => item.value.minscore === form.minscore && item.value.maxscore === form.maxscore)}
-                    isClearable={false}
-                    options={ratingRanges}
-                    onChange={handleAccountTypeChange}
                   />
                 </Col>
-                <Col className="d-grid" sm="12">
-                  <Button
-                    className="btn_sch"
-                    color="info"
-                    onClick={apiHandlerForSearch}
-                  >
-                    Search</Button>
+
+                {/* Rating Filter */}
+                <Col sm="12" className="mb-1">
+                  <Label>Rating</Label>
+                  <Select
+                    options={ratingRanges}
+                    value={ratingRanges.find(
+                      (r) => r.value.minscore === form.minscore &&
+                        r.value.maxscore === form.maxscore
+                    )}
+                    onChange={handleRatingChange}
+                    classNamePrefix="select"
+                  />
+                </Col>
+
+                {/* Sentiment Filter */}
+                <Col sm="12" className="mb-1">
+                  <Label>Sentiment</Label>
+                  <Select
+                    options={sentimentOptions}
+                    value={sentimentOptions.find(
+                      (s) => s.value === form.sentiment_filter
+                    )}
+                    onChange={handleSentimentChange}
+                    isClearable
+                    classNamePrefix="select"
+                  />
+                </Col>
+
+                {/* Sort By Filter */}
+                <Col sm="12" className="mb-1">
+                  <Label>Sort By</Label>
+                  <Select
+                    options={sortOptions}
+                    value={sortOptions.find((s) => s.value === form.sort_by)}
+                    onChange={handleSortChange}
+                    isClearable
+                    classNamePrefix="select"
+                  />
+                </Col>
+
+                <Col sm="12" className="d-grid">
+                  <Button color="info" onClick={apiHandlerForSearch}>
+                    Search
+                  </Button>
                 </Col>
               </Row>
             </Form>
